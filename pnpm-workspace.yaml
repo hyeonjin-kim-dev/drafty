@@ -1,0 +1,9 @@
+packages:
+  - 'apps/*'
+  - 'packages/*'
+
+settings:
+  preferWorkspacePackages: true
+  autoInstallPeers: true
+  strictPeerDependencies: false
+  sharedWorkspaceLockfile: true
