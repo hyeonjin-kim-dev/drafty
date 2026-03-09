@@ -4,7 +4,7 @@ import { useState, type ReactNode } from 'react';
 import { Sidebar } from '@/components/layout/sidebar';
 import { Topbar } from '@/components/layout/topbar';
 import { RightPanel } from '@/components/layout/right-panel';
-import { mockBoards, DEFAULT_BOARD_ID } from '@/data/mock-boards';
+import type { MockBoard } from '@/data/mock-boards';
 
 // 좌/우 패널 최소·최대 폭 (px)
 const LEFT_MIN = 180;
@@ -12,14 +12,23 @@ const LEFT_MAX = 720;
 const RIGHT_MIN = 220;
 const RIGHT_MAX = 840;
 
-type AppShellProps = { children: ReactNode };
+type AppShellProps = {
+  children: ReactNode;
+  boards: MockBoard[];
+  selectedBoardId: string;
+  onSelectBoard: (id: string) => void;
+  boardName: string;
+};
 
-export function AppShell({ children }: AppShellProps) {
-  const [selectedBoardId, setSelectedBoardId] = useState(DEFAULT_BOARD_ID);
+export function AppShell({
+  children,
+  boards,
+  selectedBoardId,
+  onSelectBoard,
+  boardName,
+}: AppShellProps) {
   const [leftWidth, setLeftWidth] = useState(224);
   const [rightWidth, setRightWidth] = useState(288);
-
-  const selectedBoard = mockBoards.find((b) => b.id === selectedBoardId) ?? mockBoards[0];
 
   // 좌측 패널 드래그 리사이즈 시작
   function startLeftResize(e: React.PointerEvent<HTMLDivElement>) {
@@ -58,9 +67,9 @@ export function AppShell({ children }: AppShellProps) {
       {/* 좌측: 사이드바 + 리사이즈 핸들 */}
       <div className="hidden md:flex shrink-0" style={{ width: leftWidth }}>
         <Sidebar
-          boards={mockBoards}
+          boards={boards}
           selectedBoardId={selectedBoardId}
-          onSelectBoard={setSelectedBoardId}
+          onSelectBoard={onSelectBoard}
         />
         {/* 좌측 리사이즈 핸들 — 시각적으로 1px 선, grab 영역은 12px */}
         <div
@@ -76,7 +85,7 @@ export function AppShell({ children }: AppShellProps) {
 
       {/* 우측: 툴바 + (메인 캔버스 + 우측 패널) */}
       <div className="flex flex-1 flex-col min-w-0">
-        <Topbar boardName={`${selectedBoard.emoji} ${selectedBoard.name}`} />
+        <Topbar boardName={boardName} />
         <div className="flex flex-1 min-h-0">
           {/* 중앙 메인 — 추후 React Flow 캔버스가 들어갈 자리 */}
           <main className="flex-1 min-w-0 min-h-0 overflow-hidden">{children}</main>

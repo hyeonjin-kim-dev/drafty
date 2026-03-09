@@ -1,9 +1,21 @@
+@import '@xyflow/react/dist/style.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
   color-scheme: light;
+}
+
+/* React Flow — Drafty 톤에 맞춘 최소 오버라이드 */
+.react-flow__attribution {
+  display: none;
+}
+
+.react-flow__selection {
+  background: rgba(59, 130, 246, 0.08);
+  border: 1px solid rgba(59, 130, 246, 0.4);
 }
 
 * {
