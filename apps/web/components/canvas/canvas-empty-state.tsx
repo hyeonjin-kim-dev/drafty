@@ -13,7 +13,7 @@ export function CanvasEmptyState({ emoji, boardName }: CanvasEmptyStateProps) {
         <div className="text-center">
           <p className="text-sm font-medium text-gray-500">{boardName}</p>
           <p className="text-xs text-gray-400 mt-0.5">
-            캔버스가 비어 있습니다 · 메모를 추가해 보세요
+            Inbox 패널에서 메모를 추가하거나 캔버스를 더블클릭해 시작하세요
           </p>
         </div>
       </div>

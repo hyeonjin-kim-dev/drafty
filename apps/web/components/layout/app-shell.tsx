@@ -5,6 +5,7 @@ import { Sidebar } from '@/components/layout/sidebar';
 import { Topbar } from '@/components/layout/topbar';
 import { RightPanel } from '@/components/layout/right-panel';
 import type { MockBoard } from '@/data/mock-boards';
+import type { InboxNote } from '@drafty/shared-types';
 
 // 좌/우 패널 최소·최대 폭 (px)
 const LEFT_MIN = 180;
@@ -18,6 +19,8 @@ type AppShellProps = {
   selectedBoardId: string;
   onSelectBoard: (id: string) => void;
   boardName: string;
+  inboxNotes: InboxNote[];
+  onAddToCanvas: (id: string) => void;
 };
 
 export function AppShell({
@@ -26,6 +29,8 @@ export function AppShell({
   selectedBoardId,
   onSelectBoard,
   boardName,
+  inboxNotes,
+  onAddToCanvas,
 }: AppShellProps) {
   const [leftWidth, setLeftWidth] = useState(224);
   const [rightWidth, setRightWidth] = useState(288);
@@ -66,11 +71,7 @@ export function AppShell({
     <div className="flex h-screen overflow-hidden bg-white select-none">
       {/* 좌측: 사이드바 + 리사이즈 핸들 */}
       <div className="hidden md:flex shrink-0" style={{ width: leftWidth }}>
-        <Sidebar
-          boards={boards}
-          selectedBoardId={selectedBoardId}
-          onSelectBoard={onSelectBoard}
-        />
+        <Sidebar boards={boards} selectedBoardId={selectedBoardId} onSelectBoard={onSelectBoard} />
         {/* 좌측 리사이즈 핸들 — 시각적으로 1px 선, grab 영역은 12px */}
         <div
           className="relative w-3 shrink-0 cursor-col-resize group bg-gradient-to-r from-gray-50 to-white"
@@ -102,7 +103,7 @@ export function AppShell({
             >
               <div className="absolute top-0 bottom-0 left-1/2 w-px -translate-x-1/2 bg-gray-200 group-hover:bg-blue-400 transition-colors" />
             </div>
-            <RightPanel />
+            <RightPanel inboxNotes={inboxNotes} onAddToCanvas={onAddToCanvas} />
           </div>
         </div>
       </div>

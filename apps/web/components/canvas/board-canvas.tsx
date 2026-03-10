@@ -17,7 +17,7 @@ import type { MockBoard } from '@/data/mock-boards';
 import { getBoardCanvasSnapshot } from '@/data/mock-board-canvas';
 import { CanvasEmptyState } from '@/components/canvas/canvas-empty-state';
 import { NoteNode } from '@/components/canvas/note-node';
-import type { NoteNodeData } from '@drafty/shared-types';
+import type { NoteNodeData, InboxNote } from '@drafty/shared-types';
 
 // 선택 상태 구조 — 아직 실제 선택 UI는 없지만 다음 브랜치에서 사용
 type CanvasSelection = {
@@ -33,9 +33,11 @@ const edgeTypes: EdgeTypes = {};
 
 type BoardCanvasProps = {
   board: MockBoard;
+  pendingInboxNotes: InboxNote[]; // inbox → canvas 대기 큐
+  onInboxNoteAdded: (id: string) => void; // 소비 완료 콜백
 };
 
-export function BoardCanvas({ board }: BoardCanvasProps) {
+export function BoardCanvas({ board, pendingInboxNotes, onInboxNoteAdded }: BoardCanvasProps) {
   const snapshot = getBoardCanvasSnapshot(board.id);
 
   const [nodes, setNodes, onNodesChange] = useNodesState(snapshot.initialNodes);
@@ -62,6 +64,30 @@ export function BoardCanvas({ board }: BoardCanvasProps) {
     });
   }, []);
 
+  // pendingInboxNotes 큐 순차 소비 — inbox에서 캔버스로 추가된 노드 처리
+  useEffect(() => {
+    if (pendingInboxNotes.length === 0 || !rfInstance) return;
+
+    const note = pendingInboxNotes[0];
+    const center = rfInstance.screenToFlowPosition({
+      x: window.innerWidth / 2,
+      y: window.innerHeight / 2,
+    });
+    // 여러 개가 동시에 추가될 때 겹침 방지용 오프셋
+    const offset = (pendingInboxNotes.length - 1) * 20;
+
+    const newNode: Node<NoteNodeData, 'note'> = {
+      id: `note-${Date.now()}`,
+      type: 'note',
+      position: { x: center.x + offset, y: center.y + offset },
+      data: { markdown: note.markdown, title: note.title },
+      style: { width: 200, height: 140 },
+    };
+
+    setNodes((prev) => [...prev, newNode]);
+    onInboxNoteAdded(note.id);
+  }, [pendingInboxNotes, rfInstance, setNodes, onInboxNoteAdded]);
+
   // 빈 캔버스 더블클릭 시 NoteNode 생성 — 노드 위 더블클릭 버블링 차단을 위해 pane 클래스 검사
   const onPaneDoubleClick = useCallback(
     (e: React.MouseEvent) => {
@@ -74,7 +100,7 @@ export function BoardCanvas({ board }: BoardCanvasProps) {
         id: `note-${Date.now()}`,
         type: 'note',
         position,
-        data: { content: '' },
+        data: { markdown: '' },
         style: { width: 180, height: 130 },
       };
       setNodes((prev) => [...prev, newNode]);
