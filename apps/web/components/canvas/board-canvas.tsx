@@ -10,10 +10,14 @@ import {
   type OnSelectionChangeParams,
   type NodeTypes,
   type EdgeTypes,
+  type ReactFlowInstance,
+  type Node,
 } from '@xyflow/react';
 import type { MockBoard } from '@/data/mock-boards';
 import { getBoardCanvasSnapshot } from '@/data/mock-board-canvas';
 import { CanvasEmptyState } from '@/components/canvas/canvas-empty-state';
+import { NoteNode } from '@/components/canvas/note-node';
+import type { NoteNodeData } from '@drafty/shared-types';
 
 // 선택 상태 구조 — 아직 실제 선택 UI는 없지만 다음 브랜치에서 사용
 type CanvasSelection = {
@@ -21,8 +25,10 @@ type CanvasSelection = {
   edgeIds: string[];
 };
 
-// 확장 포인트: 추후 커스텀 노드/엣지 타입을 여기에 등록
-const nodeTypes: NodeTypes = {};
+// 컴포넌트 외부 모듈 상수로 선언 — 내부 선언 시 렌더마다 새 객체 생성 → React Flow 노드 리마운트 발생
+const nodeTypes: NodeTypes = {
+  note: NoteNode,
+};
 const edgeTypes: EdgeTypes = {};
 
 type BoardCanvasProps = {
@@ -38,6 +44,8 @@ export function BoardCanvas({ board }: BoardCanvasProps) {
     nodeIds: [],
     edgeIds: [],
   });
+  // ReactFlow 인스턴스 캡처 — useReactFlow()는 Provider 컨텍스트 내부에서만 호출 가능하므로 onInit 패턴 사용
+  const [rfInstance, setRfInstance] = useState<ReactFlowInstance | null>(null);
 
   // 보드 전환 시 캔버스 상태 초기화
   useEffect(() => {
@@ -54,6 +62,26 @@ export function BoardCanvas({ board }: BoardCanvasProps) {
     });
   }, []);
 
+  // 빈 캔버스 더블클릭 시 NoteNode 생성 — 노드 위 더블클릭 버블링 차단을 위해 pane 클래스 검사
+  const onPaneDoubleClick = useCallback(
+    (e: React.MouseEvent) => {
+      const target = e.target as Element;
+      if (!target.classList.contains('react-flow__pane')) return;
+      if (!rfInstance) return;
+
+      const position = rfInstance.screenToFlowPosition({ x: e.clientX, y: e.clientY });
+      const newNode: Node<NoteNodeData, 'note'> = {
+        id: `note-${Date.now()}`,
+        type: 'note',
+        position,
+        data: { content: '' },
+        style: { width: 180, height: 130 },
+      };
+      setNodes((prev) => [...prev, newNode]);
+    },
+    [rfInstance, setNodes],
+  );
+
   // 향후 우측 패널 연동 등에서 selection을 활용할 수 있도록 _ prefix 없이 유지
   void selection;
 
@@ -67,6 +95,8 @@ export function BoardCanvas({ board }: BoardCanvasProps) {
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onSelectionChange={onSelectionChange}
+        onInit={setRfInstance}
+        onDoubleClick={onPaneDoubleClick}
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
         defaultViewport={defaultViewport}

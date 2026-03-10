@@ -1,4 +1,7 @@
 ﻿import type { Node, Edge, Viewport } from '@xyflow/react';
+import type { NoteNodeData } from '@drafty/shared-types';
+
+type NoteNode = Node<NoteNodeData, 'note'>;
 
 type BoardCanvasSnapshot = {
   initialNodes: Node[];
@@ -12,9 +15,38 @@ const EMPTY_SNAPSHOT: BoardCanvasSnapshot = {
   defaultViewport: { x: 0, y: 0, zoom: 1 },
 };
 
+const productIdeasNodes: NoteNode[] = [
+  {
+    id: 'note-1',
+    type: 'note',
+    position: { x: 80, y: 100 },
+    data: { content: '첫 번째 아이디어' },
+    style: { width: 180, height: 130 },
+  },
+  {
+    id: 'note-2',
+    type: 'note',
+    position: { x: 320, y: 60 },
+    data: { content: '두 번째 아이디어' },
+    style: { width: 180, height: 130 },
+  },
+  {
+    id: 'note-3',
+    type: 'note',
+    position: { x: 190, y: 280 },
+    data: { content: '세 번째 아이디어' },
+    style: { width: 180, height: 130 },
+  },
+];
+
 // 보드 ID → 캔버스 초기 상태 맵핑
-// 현재는 모든 보드가 빈 캔버스. 추후 보드별 저장 데이터로 교체 예정.
-const snapshotMap: Record<string, BoardCanvasSnapshot> = {};
+const snapshotMap: Record<string, BoardCanvasSnapshot> = {
+  'product-ideas': {
+    initialNodes: productIdeasNodes,
+    initialEdges: [],
+    defaultViewport: { x: 0, y: 0, zoom: 1 },
+  },
+};
 
 export function getBoardCanvasSnapshot(boardId: string): BoardCanvasSnapshot {
   return snapshotMap[boardId] ?? EMPTY_SNAPSHOT;
